@@ -14,7 +14,7 @@ function main(){
     
     
     var mob = [];
-        mob[0] = {x: Math.floor((canvas.width-10)*Math.random())+5, y: Math.floor((canvas.height-30)*Math.random())+1, xv:2.5, yv:0, size:15, gravity:true, alive:true};
+        mob[0] = {x: Math.floor((canvas.width-10)*Math.random())+5, y: Math.floor((canvas.height-30)*Math.random())+1, xv:2.5, yv:0, size:15};
     
     function create_mob(){
         this.x = Math.floor((canvas.width-10)*Math.random())+5; 
@@ -126,23 +126,18 @@ function main(){
             }
         }
         
-        for(var m=mob.length - 1; m >= 0; m--){
-            if(mob[m].y < ground[0].y - mob[m].size && mob[m].gravity){
-                mob[m].yv += 9.81/100;
-                mob[m].y += mob[m].yv;
-            }
-            for(var i=0; i <= ground.length - 1; i++){
-                if(mob[m].x >= ground[i].x - mob[m].size && mob[m].x <= ground[i].x + ground[i].w){
-                    if(mob[m].y >= ground[i].y - mob[m].size && mob[m].y < ground[i].y){
-                        mob[m].y = ground[i].y - mob[m].size;
-                        mob[m].yv = 0;
-                        mob[m].gravity = false;
-                    } else if(mob[m].y <= ground[i].y + ground[i].h && mob[m].y > ground[i].y){
-                        mob[m].y = ground[i].y + ground[i].h;
-                        char_jump = ground[i].y + ground[i].h;
-                    }
-                }
-            }
+        for( var m=0; m <= mob.length - 1; m++){
+			for( var i=0; i <= ground.length -1; i++){
+				if(mob[m].x >= ground[i].x - mob[m].size + 1 && mob[m].x <= ground[i].x + ground[i].w && mob[m].y >= ground[i].y - mob[m].size && mob[m].y < ground[i].y ){
+					mob[m].y = ground[i].y - mob[m].size;
+					mob[m].yv=0;
+					break;
+				}
+				else {
+					mob[m].yv += 9.81/500;
+					mob[m].y += mob[m].yv;
+				}
+			}
             if(character.x + character.size >= mob[m].x && character.x <= mob[m].x + mob[m].size){
                 if(character.y + character.size >= mob[m].y && character.y <= mob[m].y + mob[m].size){
                     mob[m] = 0;
