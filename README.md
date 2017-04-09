@@ -1,8 +1,8 @@
 # ISN-Project
 
-Code for the project
+Code for the game.
 
-How to use:
+How to install and use this game:
 
 1. Download files.
 2. Open the folder with files.
