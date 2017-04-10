@@ -10,16 +10,13 @@ function main(){
     var char_jump = 0;
     var score = 0;
     var mouse = {x:0, y:0, down:false};
-    
-    var character = {x:canvas.width/2, y:canvas.height/2, xv:5, yv:0, size:20, jump:200, health:10};       // Elements à créer
-    
-    var shoot_time = 0;
+	var gun = {delay: 6, delay_recharge: 125, balles: 30, ballesmax: 30, recharge: false};		// caractèristique de l'arme
+    var character = {x:canvas.width/2, y:canvas.height/2, xv:5, yv:0, size:20, jump:200, health:10};       // Elements à créer  
     var shoots = [];
-	var speed_norme = 5;		// vitesse des balles
+	var speed_norme = 7.5;		// vitesse des balles
     var mob = [];
 	var a = 1500;
     var mob_health = 2;
-    
 	var sl= 0;
 	var dx = 0;
 	var dy = 0;
@@ -50,31 +47,32 @@ function main(){
     
     function key_down(ev){             // fonction active à l'appui d'une touche
         switch(ev.keyCode){
-            case 37:kl = true;
+            case 81:kl = true;
                 break;
-            case 38:ku = true;
+            case 90:ku = true;
                 break;
-            case 39:kr = true;
+            case 68:kr = true;
                 break;
+			case 82:gun.recharge = true;
         }
         
     }
         
     function key_up(ev){               // fonction active lorsque la touche est relachée
         switch(ev.keyCode){
-            case 37:kl = false;
+            case 81:kl = false;
                 break;
-            case 38:ku = false;
+            case 90:ku = false;
                 break;
-            case 39:kr = false;
+            case 68:kr = false;
                 break;
         }
             
     }
     
     function mouse_down(ev){
-		mouse.down = true;
-        mouse.x = ev.x;
+        mouse.down = true;
+		mouse.x = ev.x;
         mouse.y = ev.y;
     }
     
@@ -97,19 +95,32 @@ function main(){
 	} 
         
     function background(){
-        if(mouse.down)shoot_time++;
-        if(mouse.down && shoot_time >= 10){
-            shoots.push( {x: character.x + character.size/2, y: character.y + character.size/2, xv: 0, yv: 0, size: 2} );
-            fshoots(mouse.x, mouse.y);
-            shoot_time=0;
-        }
         
+        if (mouse.down && gun.delay >= 6 && gun.recharge == false){
+			shoots.push( {x: character.x + character.size/2, y: character.y + character.size/2, xv: 0, yv: 0, size: 2}) ;
+			fshoots(mouse.x, mouse.y);
+			gun.delay = 0;
+			gun.balles --;
+			gun.delay_recharge -= 125/gun.ballesmax;
+			if (gun.balles == 0) gun.recharge = true;
+		}
+
+		if (gun.delay < 6) gun.delay++;
+		if (gun.delay_recharge < 125 && gun.recharge){
+			gun.delay_recharge ++;
+		}
+		if (gun.delay_recharge >= 125){
+			gun.balles = gun.ballesmax;
+			gun.recharge = false;
+		}
+
+			
 		for(var s =0; s <= shoots.length-1; s++){
 			shoots[s].x += shoots[s].xv;
 			shoots[s].y -= shoots[s].yv;
             
             for(var g=0; g <= ground.length -1; g++){
-                if(shoots[s].x + shoots[s].size >= ground[g].x && shoots[s].x <= ground[g].x + ground[g].w && shoots[s].y + shoots[s].size >= ground[g].y && shoots[s].y <= ground[g].y + ground[g].h){
+                if(shoots[s].x + shoots[s].size >= ground[g].x && shoots[s].x <= ground[g].x + ground[g].w && shoots[s].y + shoots[s].size >= ground[g].y && shoots[s].y <= ground[g].y + ground[g].h || shoots[s].y > canvas.height || shoots[s].y < 0 || shoots[s].x > canvas.width || shoots[s].x < 0){
                     shoots.splice(s,1);
                 }
             }
@@ -131,6 +142,7 @@ function main(){
         ctx.font="20px Arial";
         ctx.fillText("Score: " + score, 10, 40);
         ctx.rect(character.x, character.y, character.size, character.size);
+		ctx.rect(character.x + character.size + 10, character.y + character.size +10, -gun.delay_recharge*(character.size + 20)/125, 3.5);
 		for(var m=0; m <= mob.length - 1; m++){
             ctx.rect(mob[m].x, mob[m].y, mob[m].size, mob[m].size);
         }
@@ -141,7 +153,7 @@ function main(){
 			ctx.rect(shoots[s].x, shoots[s].y, shoots[s].size, shoots[s].size);
         }
         ctx.stroke();
-        
+
         if(kl){    		                                            // Elements du déplacement du joueur
             character.x -= character.xv;
         } else if(kr){
@@ -194,50 +206,48 @@ function main(){
         }
         
         for( var m=0; m <= mob.length - 1; m++){
-			for( var i=0; i <= ground.length -1; i++){						// Gravité pour les mobs
-				if(mob[m].x >= ground[i].x - mob[m].size && mob[m].x <= ground[i].x + ground[i].w && mob[m].y >= ground[i].y - mob[m].size && mob[m].y < ground[i].y){
-					mob[m].y = ground[i].y - mob[m].size;
-					mob[m].yv=0;					
-				}
-				else {
-					mob[m].yv += 9.81/500;
-					mob[m].y += mob[m].yv;
-				}
+		for( var i=0; i <= ground.length -1; i++){						// Gravité pour les mobs
+			if(mob[m].x >= ground[i].x - mob[m].size && mob[m].x <= ground[i].x + ground[i].w && mob[m].y >= ground[i].y - mob[m].size && mob[m].y < ground[i].y){
+				mob[m].y = ground[i].y - mob[m].size;
+				mob[m].yv=0;					
+			}
+			else {
+				mob[m].yv += 9.81/500;
+				mob[m].y += mob[m].yv;
+			}
 
-				if (mob[m].x >= ground[i].x - mob[m].size && mob[m].x <= ground[i].x + ground[i].w && mob[m].y == ground[i].y - mob[m].size){		// Détecte sur quel plateau est le mob
-					if (character.x >= ground[i].x - character.size && character.x <= ground[i].x + ground[i].w && character.y <= ground[i].y - character.size && character.y >= ground[i].y - character.size - 200){     // Détecte sur quel plateau est le joueur
-						if(character.x - mob[m].x > 0){
-							mob[m].goRight = 2;
-						}
-						else{
-							mob[m].goRight = -2;
-						}
+			if (mob[m].x >= ground[i].x - mob[m].size && mob[m].x <= ground[i].x + ground[i].w && mob[m].y == ground[i].y - mob[m].size){		// Détecte sur quel plateau est le mob
+				if (character.x >= ground[i].x - character.size && character.x <= ground[i].x + ground[i].w && character.y <= ground[i].y - character.size && character.y >= ground[i].y - character.size - 200){     // Détecte sur quel plateau est le joueur
+					if(character.x - mob[m].x > 0){
+						mob[m].goRight = 2;
 					}
-					
-					else if (ground[i].x + ground[i].w - mob[m].x < mob[m].size) {			// Mob va à droite
-						mob[m].goRight = -1;
+					else{
+						mob[m].goRight = -2;
 					}
-					else if (ground[i].x + mob[m].xv > mob[m].x) {							// Mob va à gauche
-						mob[m].goRight = 1;
+				}
+				
+				else if (ground[i].x + ground[i].w - mob[m].x < mob[m].size) {			// Mob va à droite
+					mob[m].goRight = -1;
+				}
+				else if (ground[i].x + mob[m].xv > mob[m].x) {							// Mob va à gauche
+					mob[m].goRight = 1;
 					}
-					if (mob[m].goRight == 1){
-						mob[m].x += mob[m].xv;
-					}
-					else if(mob[m].goRight == -1){
-						mob[m].x -= mob[m].xv;
-					}
-					else if(mob[m].goRight == 2){
-						mob[m].x += 2*mob[m].xv;
-					}
-					else if(mob[m].goRight == -2){
-						mob[m].x -= 2*mob[m].xv;
-					}
+				if (mob[m].goRight == 1){
+					mob[m].x += mob[m].xv;
+				}
+				else if(mob[m].goRight == -1){
+					mob[m].x -= mob[m].xv;
+				}
+				else if(mob[m].goRight == 2){
+					mob[m].x += 2*mob[m].xv;
+				}
+				else if(mob[m].goRight == -2){
+					mob[m].x -= 2*mob[m].xv;
 				}
 			}
-			
-			
-			
-			
+		}
+
+		
             if(character.x + character.size >= mob[m].x && character.x <= mob[m].x + mob[m].size){					// Interaction
                 if(character.y + character.size > mob[m].y && character.y < mob[m].y + mob[m].size){
                     character.health--;
